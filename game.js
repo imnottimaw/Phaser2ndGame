@@ -2,6 +2,7 @@ var config = {
     type: Phaser.AUTO,
     width: 1920,
     height: 919,
+    playerSpeed: 500,
     physics: {
         default: 'arcade',
         arcade: {
@@ -17,7 +18,7 @@ var config = {
 };
 
 var game = new Phaser.Game(config);
-var worldWidth = config.width*5;
+var worldWidth = config.width * 5;
 
 function preload ()
 {
@@ -25,43 +26,59 @@ function preload ()
     this.load.image('tile','assets/tile.png');
     this.load.image('player','assets/player.png');
     this.load.image('star', 'assets/star.png');
+    this.load.image('tileleft', 'assets/tileleft.png');
+    this.load.image('tilecenter', 'assets/tilecenter.png');
+    this.load.image('tileright', 'assets/tileright.png');
+    this.load.image('well','assets/well.png')
+    this.load.image('tower','assets/tower.png')
 }
 function create()
 {
-    this.add.image(960, 500, 'background');
+    this.add.tileSprite(0,0,worldWidth,1080,"background").setOrigin(0,0).setDepth(0);
     platforms = this.physics.add.staticGroup();
     for (var i = 0; i<worldWidth;i = i +189){
         platforms.create(i, 880, 'tile').refreshBody();
     }
-    for (var e = 0; e<600;e= e+189){
-        platforms.create(e,500,'tile').refreshBody();
+    for (var i = 0; i<worldWidth;i = i + Phaser.Math.FloatBetween(400,600)){
+        var rand = Phaser.Math.FloatBetween(400,700);
+        platforms.create(i, rand, 'tileleft').refreshBody();
+        platforms.create(i+128,rand,'tilecenter').refreshBody();
+        platforms.create(i+256,rand,'tileright').refreshBody();
     }
-    for (var e = 1200; e<2000;e= e+189){
-        platforms.create(e,600,'tile').refreshBody();
+    for (var i = 0; i<worldWidth; i = i + Phaser.Math.FloatBetween(400,600)){
+        this.add.image(i,800,'well').setDepth(1);
     }
-    player = this.physics.add.sprite(100,100,'player');
+    for (var i = 0; i<worldWidth; i = i + Phaser.Math.FloatBetween(200,600)){
+        this.add.image(i,630,'tower').setDepth(2);
+    }
+
+    platforms.create(9600,880,'tile')
+    player = this.physics.add.sprite(100,100,'player').setDepth(5); 
     player.setBounce(0.2);
     player.setCollideWorldBounds(true);
     cursors = this.input.keyboard.createCursorKeys();
     this.physics.add.collider(player, platforms);
     stars = this.physics.add.group({
         key: 'star',
-        repeat: 11,
-        setXY: { x: 12, y: 0, stepX: 200 }
+        repeat: 1000,
+        setXY: { x: 1, y: 0, stepX: Phaser.Math.FloatBetween(1,50) }
     });
     this.physics.add.collider(stars, platforms);
     this.physics.add.overlap(player, stars, collectStar, null, this);
-    
+
+    this.cameras.main.setBounds(0,0,worldWidth,919);
+    this.physics.world.setBounds(0,0,worldWidth,919);
+    this.cameras.main.startFollow(player);
 }
 function update()
 {
     if (cursors.left.isDown)
     {
-        player.setVelocityX(-160);
+        player.setVelocityX(-config.playerSpeed);
     }
     else if (cursors.right.isDown)
     {
-        player.setVelocityX(160);
+        player.setVelocityX(config.playerSpeed);
     }
     else
     {
@@ -70,7 +87,7 @@ function update()
 
     if (cursors.up.isDown && player.body.touching.down)
     {
-        player.setVelocityY(-450);
+        player.setVelocityY(-500);
     }
 }
 function collectStar (player, star)
