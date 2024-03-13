@@ -19,6 +19,10 @@ var config = {
 
 var game = new Phaser.Game(config);
 var worldWidth = config.width * 5;
+var scoreText;
+var score = 0;
+var hp = 5;
+var bombs;
 
 function preload ()
 {
@@ -31,6 +35,7 @@ function preload ()
     this.load.image('tileright', 'assets/tileright.png');
     this.load.image('well','assets/well.png')
     this.load.image('tower','assets/tower.png')
+    this.load.image('bomb','assets/bomb.png')
 }
 function create()
 {
@@ -61,17 +66,25 @@ function create()
     stars = this.physics.add.group({
         key: 'star',
         repeat: 1000,
-        setXY: { x: 1, y: 0, stepX: Phaser.Math.FloatBetween(1,50) }
+        setXY: { x: 1, y: 0, stepX: Phaser.Math.FloatBetween(30,50) }
     });
+    bombs = this.physics.add.group();
+    scoreText = this.add.text(this.cameras.main.worldView.x, this.cameras.main.worldView.y, 'Score: 0', { fontSize: '32px', fill: '#000' });
+    hpText = this.add.text(this.cameras.main.worldView.x, this.cameras.main.worldView.y, hp, { fontSize: '32px', fill: '#000' });
     this.physics.add.collider(stars, platforms);
     this.physics.add.overlap(player, stars, collectStar, null, this);
-
+    this.physics.add.collider(bombs, platforms);
+    this.physics.add.collider(player, bombs, hitBomb, null, this);
+    
+    
     this.cameras.main.setBounds(0,0,worldWidth,919);
     this.physics.world.setBounds(0,0,worldWidth,919);
     this.cameras.main.startFollow(player);
 }
 function update()
 {
+    scoreText.setPosition(this.cameras.main.worldView.x+16,this.cameras.main.worldView.y+16);
+    hpText.setPosition(this.cameras.main.worldView.x+1850,this.cameras.main.worldView.y+16);
     if (cursors.left.isDown)
     {
         player.setVelocityX(-config.playerSpeed);
@@ -93,4 +106,23 @@ function update()
 function collectStar (player, star)
 {
     star.disableBody(true, true);
+    score += 1;
+    scoreText.setText('Score: ' + score);
+    var bomb = bombs.create(player.x, player.y+100, 'bomb');
+    bomb.setBounce(1);
+    bomb.setCollideWorldBounds(true);
+    bomb.setVelocity(Phaser.Math.Between(-200, 200), 20);
+    bomb.allowGravity = false;
+}
+function setHP(){
+    if (hp <= 0){
+        hpText.setText('0');
+        scoreText.setText("You Lose " + score);
+        this.scene.paused = true;
+    }
+    hpText.setText(hp);
+}   
+function hitBomb(){
+    hp = hp - 1;
+    setHP();
 }
