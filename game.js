@@ -3,6 +3,7 @@ var config = {
     width: 1920,
     height: 919,
     playerSpeed: 500,
+    enemyCount: 12,
     physics: {
         default: 'arcade',
         arcade: {
@@ -36,6 +37,7 @@ function preload ()
     this.load.image('well','assets/well.png')
     this.load.image('tower','assets/tower.png')
     this.load.image('bomb','assets/bomb.png')
+    this.load.image('enemy','assets/enemy.png')
 }
 function create()
 {
@@ -54,7 +56,7 @@ function create()
         this.add.image(i,800,'well').setDepth(1);
     }
     for (var i = 0; i<worldWidth; i = i + Phaser.Math.FloatBetween(200,600)){
-        this.add.image(i,630,'tower').setDepth(2);
+       this.add.image(i,730,'tower').setDepth(2).setScale(0.5);
     }
 
     platforms.create(9600,880,'tile')
@@ -65,9 +67,14 @@ function create()
     this.physics.add.collider(player, platforms);
     stars = this.physics.add.group({
         key: 'star',
-        repeat: 1000,
-        setXY: { x: 1, y: 0, stepX: Phaser.Math.FloatBetween(30,50) }
+        repeat: 100,
+        setXY: { x: 1, y: 0, stepX: Phaser.Math.FloatBetween(30,100) }
     });
+    //enemy = this.physics.add.group({
+    //    key: 'enemy',
+    //    repeat: config.enemyCount,
+    //    setXY: {x: 100, y: config.height - 150 }
+    //});
     bombs = this.physics.add.group();
     scoreText = this.add.text(this.cameras.main.worldView.x, this.cameras.main.worldView.y, 'Score: 0', { fontSize: '32px', fill: '#000' });
     hpText = this.add.text(this.cameras.main.worldView.x, this.cameras.main.worldView.y, hp, { fontSize: '32px', fill: '#000' });
@@ -108,7 +115,7 @@ function collectStar (player, star)
     star.disableBody(true, true);
     score += 1;
     scoreText.setText('Score: ' + score);
-    var bomb = bombs.create(player.x, player.y+100, 'bomb');
+    var bomb = bombs.create(player.x-Phaser.Math.FloatBetween(50,200), player.y-Phaser.Math.FloatBetween(50,200), 'bomb');
     bomb.setBounce(1);
     bomb.setCollideWorldBounds(true);
     bomb.setVelocity(Phaser.Math.Between(-200, 200), 20);
@@ -117,8 +124,8 @@ function collectStar (player, star)
 function setHP(){
     if (hp <= 0){
         hpText.setText('0');
-        scoreText.setText("You Lose " + score);
-        this.scene.paused = true;
+        scoreText.setText("You Lose\n      " + score);
+        setTimeout(() => location.reload(), 10000)
     }
     hpText.setText(hp);
 }   
