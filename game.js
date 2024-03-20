@@ -67,8 +67,8 @@ function create()
     this.physics.add.collider(player, platforms);
     stars = this.physics.add.group({
         key: 'star',
-        repeat: 100,
-        setXY: { x: 1, y: 0, stepX: Phaser.Math.FloatBetween(30,100) }
+        repeat: 50,
+        setXY: { x: 1, y: 0, stepX: Phaser.Math.FloatBetween(70,250) }
     });
     //enemy = this.physics.add.group({
     //    key: 'enemy',
@@ -115,7 +115,7 @@ function collectStar (player, star)
     star.disableBody(true, true);
     score += 1;
     scoreText.setText('Score: ' + score);
-    var bomb = bombs.create(player.x-Phaser.Math.FloatBetween(50,200), player.y-Phaser.Math.FloatBetween(50,200), 'bomb');
+    var bomb = bombs.create(player.x+Phaser.Math.FloatBetween(50,250), player.y-Phaser.Math.FloatBetween(50,400), 'bomb');
     bomb.setBounce(1);
     bomb.setCollideWorldBounds(true);
     bomb.setVelocity(Phaser.Math.Between(-200, 200), 20);
@@ -125,7 +125,7 @@ function setHP(){
     if (hp <= 0){
         hpText.setText('0');
         scoreText.setText("You Lose\n      " + score);
-        setTimeout(() => location.reload(), 10000)
+        setTimeout(() => location.reload(), 1000)
     }
     hpText.setText(hp);
 }   
