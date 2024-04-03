@@ -38,6 +38,7 @@ function preload ()
     this.load.image('tower','assets/tower.png')
     this.load.image('bomb','assets/bomb.png')
     this.load.image('enemy','assets/enemy.png')
+    this.load.image('bullet','assets/bullet.png')
 }
 function create()
 {
@@ -70,11 +71,22 @@ function create()
         repeat: 50,
         setXY: { x: 1, y: 0, stepX: Phaser.Math.FloatBetween(70,250) }
     });
-    //enemy = this.physics.add.group({
-    //    key: 'enemy',
-    //    repeat: config.enemyCount,
-    //    setXY: {x: 100, y: config.height - 150 }
-    //});
+    enemy = this.physics.add.group({
+        key: 'enemy',
+        repeat: 15,
+        setXY: {x: Phaser.Math.FloatBetween(worldWidth/20, worldWidth/10), y: config.height - 150}
+    }).setDepth(5);
+    bullets = this.physics.add.group();
+
+    this.physics.add.collider(bullets, platforms, function (bullet) {
+        bullet.destroy();
+    }, null, this);
+
+    this.input.on('pointerdown', function (pointer) {
+        if (pointer.leftButtonDown()) {
+            fireBullet();
+        }
+    }, this);
     bombs = this.physics.add.group();
     scoreText = this.add.text(this.cameras.main.worldView.x, this.cameras.main.worldView.y, 'Score: 0', { fontSize: '32px', fill: '#000' });
     hpText = this.add.text(this.cameras.main.worldView.x, this.cameras.main.worldView.y, hp, { fontSize: '32px', fill: '#000' });
@@ -82,7 +94,8 @@ function create()
     this.physics.add.overlap(player, stars, collectStar, null, this);
     this.physics.add.collider(bombs, platforms);
     this.physics.add.collider(player, bombs, hitBomb, null, this);
-    
+    this.physics.add.collider(enemy, platforms);
+    this.physics.add.collider(player, enemy, hitBomb, null, this);
     
     this.cameras.main.setBounds(0,0,worldWidth,919);
     this.physics.world.setBounds(0,0,worldWidth,919);
@@ -125,11 +138,20 @@ function setHP(){
     if (hp <= 0){
         hpText.setText('0');
         scoreText.setText("You Lose\n      " + score);
-        setTimeout(() => location.reload(), 1000)
+        this.physics.pause();
     }
     hpText.setText(hp);
 }   
 function hitBomb(){
     hp = hp - 1;
     setHP();
+}
+function fireBullet() {
+    var bullet = bullets.create(player.x, player.y, 'bullet');
+    bullet.setScale(0.3).setDepth(4).setVelocityX(player.flipX ? -500 : 500);
+    bullet.setVelocityX(-config.playerSpeed);
+
+    var bullet = bullets.create(player.x, player.y, 'bullet');
+    bullet.setScale(0.3).setDepth(4).setVelocityX(player.flipX ? -500 : 500);
+    bullet.setVelocityX(config.playerSpeed);
 }
