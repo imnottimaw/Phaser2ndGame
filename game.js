@@ -1,7 +1,7 @@
 var config = {
     type: Phaser.AUTO,
-    width: 1920,
-    height: 919,
+    width: 1600,
+    height: 700,
     playerSpeed: 500,
     enemyCount: 12,
     physics: {
@@ -21,9 +21,14 @@ var config = {
 var game = new Phaser.Game(config);
 var worldWidth = config.width * 5;
 var scoreText;
+var cornerText;
 var score = 0;
 var hp = 5;
 var bombs;
+var facing;
+var noenemies;
+var nostars;
+var cheat = false;
 
 function preload ()
 {
@@ -42,7 +47,7 @@ function preload ()
 }
 function create()
 {
-    this.add.tileSprite(0,0,worldWidth,1080,"background").setOrigin(0,0).setDepth(0);
+    this.add.tileSprite(0,0,worldWidth,config.height+161,"background").setOrigin(0,0).setDepth(0);
     platforms = this.physics.add.staticGroup();
     for (var i = 0; i<worldWidth;i = i +189){
         platforms.create(i, 880, 'tile').refreshBody();
@@ -71,9 +76,9 @@ function create()
         repeat: 50,
         setXY: { x: 1, y: 0, stepX: Phaser.Math.FloatBetween(70,250) }
     });
-    enemy = this.physics.add.group({
+    enemies = this.physics.add.group({
         key: 'enemy',
-        repeat: 15,
+        repeat: 1,
         setXY: {x: Phaser.Math.FloatBetween(worldWidth/20, worldWidth/10), y: config.height - 150}
     }).setDepth(5);
     bullets = this.physics.add.group();
@@ -90,12 +95,14 @@ function create()
     bombs = this.physics.add.group();
     scoreText = this.add.text(this.cameras.main.worldView.x, this.cameras.main.worldView.y, 'Score: 0', { fontSize: '32px', fill: '#000' });
     hpText = this.add.text(this.cameras.main.worldView.x, this.cameras.main.worldView.y, hp, { fontSize: '32px', fill: '#000' });
+    cornerText = this.add.text(this.cameras.main.worldView.x, this.cameras.main.worldView.y, null, { fontSize: '32px', fill: '#000' });
     this.physics.add.collider(stars, platforms);
     this.physics.add.overlap(player, stars, collectStar, null, this);
     this.physics.add.collider(bombs, platforms);
     this.physics.add.collider(player, bombs, hitBomb, null, this);
-    this.physics.add.collider(enemy, platforms);
-    this.physics.add.collider(player, enemy, hitBomb, null, this);
+    this.physics.add.collider(enemies, platforms);
+    this.physics.add.collider(player, enemies, hitEnemy, null, this);
+    this.physics.add.collider(enemies, bullets, destroyEnemy, null, this);
     
     this.cameras.main.setBounds(0,0,worldWidth,919);
     this.physics.world.setBounds(0,0,worldWidth,919);
@@ -104,14 +111,20 @@ function create()
 function update()
 {
     scoreText.setPosition(this.cameras.main.worldView.x+16,this.cameras.main.worldView.y+16);
-    hpText.setPosition(this.cameras.main.worldView.x+1850,this.cameras.main.worldView.y+16);
+    hpText.setPosition(this.cameras.main.worldView.x+config.width-100,this.cameras.main.worldView.y+16);
+    scoreText.setText('Score: ' + score);
+    cornerText.setPosition(this.cameras.main.worldView.x+(config.width/2),this.cameras.main.worldView.y+16)
     if (cursors.left.isDown)
     {
         player.setVelocityX(-config.playerSpeed);
+        facing = "left";
+        console.log(facing);
     }
     else if (cursors.right.isDown)
     {
         player.setVelocityX(config.playerSpeed);
+        facing = "right";
+        console.log(facing);
     }
     else
     {
@@ -121,6 +134,17 @@ function update()
     if (cursors.up.isDown && player.body.touching.down)
     {
         player.setVelocityY(-500);
+    }
+    if(noenemies == true && nostars == true){
+        cornerText.setText("You Win\nNow you can just move around\nTo restart,hit arrow key down\n")
+        if(cursors.down.isDown){
+            location.reload();
+        }
+    }
+    if(config.physics.arcade.debug == true && cursors.down.isDown){
+        cheat = true
+        hp = 99999999
+        cornerText.setText("HP Cheat is on")
     }
 }
 function collectStar (player, star)
@@ -133,14 +157,23 @@ function collectStar (player, star)
     bomb.setCollideWorldBounds(true);
     bomb.setVelocity(Phaser.Math.Between(-200, 200), 20);
     bomb.allowGravity = false;
+    if (stars.countActive(true) === 0){
+        nostars = true;
+    }
 }
 function setHP(){
     if (hp <= 0){
         hpText.setText('0');
         scoreText.setText("You Lose\n      " + score);
-        this.physics.pause();
+        setTimeout(() =>location.reload(),1000);
     }
-    hpText.setText(hp);
+    if(cheat == true){
+        hpText.setText("∞")
+    }
+    else{
+        hpText.setText(hp);
+    }
+    
 }   
 function hitBomb(){
     hp = hp - 1;
@@ -148,10 +181,25 @@ function hitBomb(){
 }
 function fireBullet() {
     var bullet = bullets.create(player.x, player.y, 'bullet');
-    bullet.setScale(0.3).setDepth(4).setVelocityX(player.flipX ? -500 : 500);
-    bullet.setVelocityX(-config.playerSpeed);
-
-    var bullet = bullets.create(player.x, player.y, 'bullet');
-    bullet.setScale(0.3).setDepth(4).setVelocityX(player.flipX ? -500 : 500);
-    bullet.setVelocityX(config.playerSpeed);
+    bullet.setDepth(4).setVelocityX(player.flipX ? -500 : 500);
+    if(facing == "left"){
+        bullet.setVelocityX(-config.playerSpeed);
+    }
+    else{
+        bullet.setVelocityX(config.playerSpeed);
+    }
+    
+    
 }
+function destroyEnemy(enemy){
+    enemy.disableBody(true, true);
+    score += 10;
+    if (enemies.countActive(true) === 0){
+        noenemies = true;
+    }
+}
+function hitEnemy(enemy){
+    enemy.disableBody(true, true);
+    hp = hp - 1
+}
+
