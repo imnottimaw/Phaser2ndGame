@@ -8,7 +8,7 @@ var config = {
         default: 'arcade',
         arcade: {
             gravity: { y: 300 },
-            debug: false
+            debug: true
         }
     },
     scene: {
@@ -74,12 +74,12 @@ function create()
     stars = this.physics.add.group({
         key: 'star',
         repeat: 50,
-        setXY: { x: 1, y: 0, stepX: Phaser.Math.FloatBetween(70,250) }
+        setXY: { x: 1, y: 0, stepX: 160 }
     });
     enemies = this.physics.add.group({
         key: 'enemy',
-        repeat: 1,
-        setXY: {x: Phaser.Math.FloatBetween(worldWidth/20, worldWidth/10), y: config.height - 150}
+        repeat: 20,
+        setXY: {x: 500, y: config.height - 150, stepX: Phaser.Math.FloatBetween(100,250)}
     }).setDepth(5);
     bullets = this.physics.add.group();
 
@@ -101,8 +101,10 @@ function create()
     this.physics.add.collider(bombs, platforms);
     this.physics.add.collider(player, bombs, hitBomb, null, this);
     this.physics.add.collider(enemies, platforms);
-    this.physics.add.collider(player, enemies, hitEnemy, null, this);
-    this.physics.add.collider(enemies, bullets, destroyEnemy, null, this);
+    this.physics.add.collider(enemies, player, hitEnemy, null);
+    this.physics.add.collider(bullets, enemies, destroyEnemy, null, this);
+    this.physics.add.collider(bombs, enemies, destroyEnemy, null, this);
+    this.physics.add.collider(bombs, bullets, destroyEnemy, null, this);
     
     this.cameras.main.setBounds(0,0,worldWidth,919);
     this.physics.world.setBounds(0,0,worldWidth,919);
@@ -146,6 +148,8 @@ function update()
         hp = 99999999
         cornerText.setText("HP Cheat is on")
     }
+
+
 }
 function collectStar (player, star)
 {
@@ -191,14 +195,14 @@ function fireBullet() {
     
     
 }
-function destroyEnemy(enemy){
+function destroyEnemy(bullet,enemy){
     enemy.disableBody(true, true);
     score += 10;
     if (enemies.countActive(true) === 0){
         noenemies = true;
     }
 }
-function hitEnemy(enemy){
+function hitEnemy(player,enemy){
     enemy.disableBody(true, true);
     hp = hp - 1
 }
