@@ -8,7 +8,7 @@ var config = {
         default: 'arcade',
         arcade: {
             gravity: { y: 300 },
-            debug: true
+            debug: isDebugEnabled,
         }
     },
     scene: {
@@ -29,6 +29,7 @@ var facing;
 var noenemies;
 var nostars;
 var cheat = false;
+var isDebugEnabled = false
 
 function preload ()
 {
@@ -144,9 +145,11 @@ function update()
         }
     }
     if(config.physics.arcade.debug == true && cursors.down.isDown){
+        if (isDebugEnabled){
         cheat = true
         hp = 99999999
-        cornerText.setText("HP Cheat is on")
+        cornerText.setText("HP Cheat is on")}
+        else{isDebugEnabled=true}
     }
 
 
